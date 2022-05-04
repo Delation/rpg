@@ -28,15 +28,27 @@ Classes = {
 	'Support': lambda a : a+b,
 }
 
+local = True
 sleep = 0.05
 punctuation = '?!.,;:-'
+if not local:
+	from browser import document
+
+def log(text, **kwargs):
+	if local:
+		print(text, **kwargs)
+	else:
+		document['output'].textContent = document['output'].textContent + text
 
 def clear():
-	print('\x1B[2J\x1B[H')
+	if local:
+		log('\x1B[2J\x1B[H')
+	else:
+		document['output'].textContent = ''
 
 def type(input:str = '', multiplier = 1, end = '\n') -> None:
 	if multiplier < 0:
-		print(input, end = end)
+		log(input, end = end)
 		return
 	for i in input:
 		sys.stdout.write(i)
@@ -44,7 +56,7 @@ def type(input:str = '', multiplier = 1, end = '\n') -> None:
 		time.sleep(sleep / multiplier)
 		if i in punctuation or i == '\n':
 			time.sleep(sleep / multiplier * 6)
-	print('', end = end)
+	log('', end = end)
 	return
 
 def rInput(inp:str = '', multiplier = 1, end = '\n') -> str:
@@ -198,7 +210,7 @@ def main() -> None:
 	next = ''
 	while True:
 		clear()
-		print('--- %s LEVEL ---\nRoom: %s' % (level.name, level.maps[level.mapIndex].id))
+		log('--- %s LEVEL ---\nRoom: %s' % (level.name, level.maps[level.mapIndex].id))
 		input = rInput(level.showMap(user) + ('' if not next else '\n%s\n' % next), -1, '>>> ').lower()
 		next = ''
 		if input == 'up':
@@ -209,7 +221,7 @@ def main() -> None:
 			user.x -= 1
 		elif input == 'right':
 			user.x += 1
-		elif input == 'stats':	
+		elif input == 'stats':
 			next = 'Your stats:\n\n%s\n' % user.getStats().replace('\n','\n'*2)
 		elif input == 'exit':
 			return
