@@ -27,16 +27,21 @@ Classes = {
 	'Mage': lambda a : a+b,
 	'Support': lambda a : a+b,
 }
+Directions = enum.Enum('Directions', 'up down left right')
+Commands = enum.Enum('Commands', 'exit help stats')
 
 sleep = 0.05
 punctuation = '?!.,;:-'
 
+def log(*args, **kwargs):
+	print(*args, **kwargs)
+		
 def clear():
-	print('\x1B[2J\x1B[H')
-
+	log('\x1B[2J\x1B[H')
+	
 def type(input:str = '', multiplier = 1, end = '\n') -> None:
 	if multiplier < 0:
-		print(input, end = end)
+		log(input, end = end)
 		return
 	for i in input:
 		sys.stdout.write(i)
@@ -44,7 +49,7 @@ def type(input:str = '', multiplier = 1, end = '\n') -> None:
 		time.sleep(sleep / multiplier)
 		if i in punctuation or i == '\n':
 			time.sleep(sleep / multiplier * 6)
-	print('', end = end)
+	log('', end = end)
 	return
 
 def rInput(inp:str = '', multiplier = 1, end = '\n') -> str:
@@ -162,6 +167,30 @@ class Entity(Stats, Coordinates):
 		self.entity = Entities(entity)
 		BaseStats[self.entity](self)
 		return self.entity
+	
+	def input(self, inputs:list) -> str:
+		if not isinstance(inputs, list):
+			inputs = (inputs,)
+		for input in inputs:
+			if isinstance(input, Directions):
+				if input == Directions.up:
+					self.y -= 1
+				elif input == Directions.down:
+					self.y += 1
+				elif input == Directions.left:
+					self.x -= 1
+				elif input == Directions.right:
+					self.x += 1
+			elif isinstance(input, Commands):
+				if input == Commands.exit:
+					quit()
+				elif input == Commands.help:
+					return ':)'
+				elif input == Commands.stats:
+					return 'Your stats:\n\n%s\n' % self.getStats().replace('\n','\n'*2)
+			else:
+				return False
+		return ''
 
 class Player(Entity):
 	def __init__(self):
@@ -198,21 +227,13 @@ def main() -> None:
 	next = ''
 	while True:
 		clear()
-		print('--- %s LEVEL ---\nRoom: %s' % (level.name, level.maps[level.mapIndex].id))
+		log('--- %s LEVEL ---\nRoom: %s' % (level.name, level.maps[level.mapIndex].id))
 		input = rInput(level.showMap(user) + ('' if not next else '\n%s\n' % next), -1, '>>> ').lower()
 		next = ''
-		if input == 'up':
-			user.y -= 1
-		elif input == 'down':
-			user.y += 1
-		elif input == 'left':
-			user.x -= 1
-		elif input == 'right':
-			user.x += 1
-		elif input == 'stats':	
-			next = 'Your stats:\n\n%s\n' % user.getStats().replace('\n','\n'*2)
-		elif input == 'exit':
-			return
+		if input in Directions._member_names_:
+			next = user.input(Directions(Directions._member_names_.index(input) + 1))
+		elif input in Commands._member_names_:
+			next = user.input(Commands(Commands._member_names_.index(input) + 1))
 		else:
 			next = 'Type \'help\' to see all the available commands!'
 	
