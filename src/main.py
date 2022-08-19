@@ -1,3 +1,4 @@
+import os
 import sys
 import time
 import random
@@ -39,7 +40,10 @@ def log(*args, **kwargs):
 	print(*args, **kwargs)
 		
 def clear():
-	log('\x1B[2J\x1B[H')
+        if not sys.platform.startswith('win'):
+                log('\x1B[2J\x1B[H')
+        else:
+                os.system('cls' if os.name == 'nt' else 'clear')
 	
 def type(input:str = '', multiplier = 1, end = '\n') -> None:
 	if multiplier < 0:
